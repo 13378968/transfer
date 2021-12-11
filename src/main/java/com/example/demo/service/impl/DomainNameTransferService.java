@@ -1,8 +1,12 @@
 package com.example.demo.service.impl;
 
+import java.math.BigDecimal;
 import java.nio.charset.Charset;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -14,19 +18,26 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 
-import lombok.extern.slf4j.Slf4j;
-
-
 @Service
 public class DomainNameTransferService implements IDomainNameTransferService {
 	private static final String SHORT_NAME_PREFIX = "https://tu.com/";
 	
 	private static final Map<String, String> MAP = new HashMap<>();
+	private static final ConcurrentMap<String, List<BigDecimal>> MAP_LIST = new ConcurrentHashMap<>();
 	
     public Response<String> getShortDomainName(String longDomainName) {
-    	HashFunction hashFunction = Hashing.farmHashFingerprint64();
+    	HashFunction hashFunction = Hashing.murmur3_32();
     	HashCode hascode = hashFunction.hashString(longDomainName, Charset.forName("utf-8"));
-    	String shortDomain = Utils.numToStr(hascode.asLong(), 8);
+    	
+    	HashFunction hashFunction64 = Hashing.farmHashFingerprint64();
+    	HashCode hascode64 = hashFunction64.hashString(longDomainName, Charset.forName("utf-8"));
+    	BigDecimal bigDecimal = new BigDecimal(Long.toUnsignedString(hascode64.asLong()));
+    	
+    	//int count = getCollisionCount(hascode.toString(), bigDecimal);
+    	// 暂没考虑碰撞
+    	int count = 0;
+    	
+    	String shortDomain = Utils.numToStr(hascode.asInt(), 6) + Utils.numToStr(count, 2);
     	
     	MAP.put(shortDomain, longDomainName);
     	
@@ -36,6 +47,24 @@ public class DomainNameTransferService implements IDomainNameTransferService {
    	    		.data(SHORT_NAME_PREFIX + shortDomain)
    	    		.build();
     }
+    
+/*    private synchronized String getCollisionCount(String hascode32, BigDecimal hascode128) {
+    	List<BigDecimal> list = MAP_LIST.get(hascode32);
+    	if (list == null) {
+    		list = new ArrayList<>();
+    		list.add(hascode128);
+    		MAP_LIST.put(hascode32, list);
+    		return "00";
+    	} else {
+    		int index = list.indexOf(hascode128);
+    		if (index >= 0) {
+    			return index;
+    		} else {
+    			list.add(hascode128);
+    			return list.size() - 1;
+    		}
+    	}
+    }*/
     
     public Response<String> getLongDomainName(String shortDomainName) {
     	if (StringUtils.isNotBlank(shortDomainName) && shortDomainName.startsWith(SHORT_NAME_PREFIX)) {

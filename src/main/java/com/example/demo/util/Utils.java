@@ -1,27 +1,29 @@
 package com.example.demo.util;
 
 import org.apache.commons.lang3.StringUtils;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class Utils {
-   private static String chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzZa0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzZa0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzZa0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzZa";
-   private static int scale = 256;
+   private static String chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_-";
+   private static int scale = 64;
    
-   public static String numToStr(long num, int length) {
+   public static String numToStr(int num, int length) {
 	   StringBuilder builder = new StringBuilder();
 	   
-	   num = Math.abs(num);
+	   long longNum = Integer.toUnsignedLong(num);
+   	   log.info("int to long: " + num + "->" + longNum);
 	   
-	   int remainder = 0;
-	   
-	   while (num > scale - 1) {
-		   remainder = Long.valueOf(num % scale).intValue();
+	   int remainder = 0; 
+	   while (longNum > scale - 1) {
+		   remainder = Long.valueOf(longNum % scale).intValue();
 		   builder.append(chars.charAt(remainder));
 		   
-		   num = num / scale;
+		   longNum = longNum / scale;
 	   }
 	   
-	   builder.append(chars.charAt(Long.valueOf(num).intValue()));
+	   builder.append(chars.charAt(Long.valueOf(longNum).intValue()));
 	   String value = builder.reverse().toString();
-	   return StringUtils.leftPad(value, length, '0');
+	   return StringUtils.rightPad(value, length, '0');
    }
 }
