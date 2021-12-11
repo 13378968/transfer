@@ -14,6 +14,8 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 
+import lombok.extern.slf4j.Slf4j;
+
 
 @Service
 public class DomainNameTransferService implements IDomainNameTransferService {
